@@ -12,6 +12,7 @@
     "./prose.contract.css": "./design-tokens/prose.contract.css",
     "./components/ReadingProgress.astro": "./components/ReadingProgress.astro",
     "./components/SubscribeBand.astro": "./components/SubscribeBand.astro",
+    "./lib/visual-regression": "./lib/visual-regression.mjs",
     "./lib/reading-time": "./lib/reading-time.ts",
     "./lib/format": "./lib/format.ts",
     "./lib/seo": "./lib/seo.ts"

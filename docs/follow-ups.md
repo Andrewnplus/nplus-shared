@@ -1,75 +1,50 @@
 # Structural follow-ups
 
-These items are flagged as worth doing but are intentionally **not** scaffolded inside this repo because they each require either a separate Astro/Storybook project or external account setup. Recording them here so the next pass can pick up exactly where we left off.
+Three big items used to live here; all three are now implemented. Notes below capture status + where to pick up.
 
-## 1. nplus-design preview site
+## 1. ✅ nplus-design preview site — DONE
 
-**What it is**: a separate small Astro site that imports every shared primitive from `@nplus/shared` and renders them on a single `/preview` page (token swatches, `ReadingProgress`, future `SubscribeBand`, etc). The way Storybook is meant to be — but with zero JS framework, just Astro pages.
+Lives at [`Andrewnplus/nplus-design`](https://github.com/Andrewnplus/nplus-design). Served at `https://andrewnplus.github.io/nplus-design/` (configure CNAME for `design.nplus.page` later if desired). Renders every shared token and component in both themes side-by-side.
 
-**Where to put it**: new repo `Andrewnplus/nplus-design` (or `Andrewnplus/preview`). Deploy via the same `nplus-father/workflows` reusable, host at e.g. `design.nplus.page` or as a GitHub Pages subpath.
+**Maintenance**: when adding a new primitive to `@nplus/shared`, also add a render section to `src/pages/components.astro` in `nplus-design`. The two will drift if you don't.
 
-**Why it's valuable**:
+## 2. ✅ Shared `SubscribeBand` component — DONE
 
-- When you change a shared token, you see what breaks before consumer sites do.
-- New components (`SubscribeBand`, future `EpisodeCard`) get a documented rendering before the consumer adopts.
-- Acts as the implicit "spec" for what the contract should look like.
+Lives at `nplus-shared/components/SubscribeBand.astro`. Has three variants: `band` (full-width dark CTA, default), `inline` (bordered card for article bodies), `compact` (single pill). Each consumer site keeps a thin wrapper (`SubscribeSubstack` for nplus.page, `SubstackCTA` for nplus.faith) that supplies the per-site copy + Substack URL.
 
-**Sketch**:
+## 3. ✅ Visual regression CI — DONE (artifact-based; Argos integration optional)
 
-```
-nplus-design/
-├── astro.config.mjs           ← same as the consumer sites
-├── package.json               ← consumes @nplus/shared via github: ref
-└── src/
-    ├── styles/global.css      ← imports tokens.contract.css, exposes BOTH themes side-by-side
-    ├── pages/
-    │   ├── index.astro        ← list of all primitives
-    │   ├── tokens.astro       ← color/typography/spacing swatches
-    │   ├── components.astro   ← rendered components in nplus.page theme
-    │   └── components-faith.astro ← same components in nplus.faith theme
-    └── components/
-        └── Swatch.astro
-```
+Both consumer repos now ship:
 
-**Effort**: ~2–4 hours initial setup. The hard part is the design intent, not the code.
+- `scripts/screenshot.mjs` — Playwright script that visits a fixed list of routes and writes one PNG per `route × viewport` into `./screenshots/`. The actual screenshot driver lives at `@nplus/shared/lib/visual-regression.mjs` so both sites use the same headless Chrome config.
+- `.github/workflows/visual-regression.yml` — runs on every PR (and on workflow_dispatch). Builds the site, spins up `astro preview`, captures screenshots, uploads them as a workflow artifact (`screenshots-pr-<n>`).
 
----
+**How to use**: open a PR that changes UI, wait for the workflow to finish, download the artifact, eyeball the PNGs. Two viewports captured: 1280×800 (desktop) and 390×844 (mobile).
 
-## 2. Visual regression CI (Chromatic / Percy / Argos)
+**What's NOT done (deliberately deferred)**:
 
-**What it is**: every PR runs a headless browser, takes snapshots of every page (and the preview site above), diffs against `main`. Catches "I changed a Tailwind class and unintentionally broke this other page" before merge.
+- **Diff against baseline**: zero false positives but also zero automation. Each PR you compare PNGs by eye against the previous run.
+- **Argos / Chromatic upload**: would automate the diff but needs an external account + a repo secret. To enable later:
+  1. Sign up at <https://argos-ci.com> with the `Andrewnplus` org.
+  2. Add `ARGOS_TOKEN` as a repo secret (one per consumer site).
+  3. Add `@argos-ci/cli` as a dev dep and append a step to the workflow:
+     ```yaml
+     - name: Upload to Argos
+       if: env.ARGOS_TOKEN != ''
+       env:
+         ARGOS_TOKEN: ${{ secrets.ARGOS_TOKEN }}
+       run: npx @argos-ci/cli upload screenshots/
+     ```
 
-**Recommended tool**: [Argos CI](https://argos-ci.com/) — Playwright-based, generous free tier, easier setup than Chromatic for static sites.
-
-**Setup outline**:
-
-1. Sign up at argos-ci.com with the `Andrewnplus` GitHub org.
-2. Add `@argos-ci/cli` and `playwright` as devDependencies in each consumer repo.
-3. Write a Playwright script that visits the top-N pages and screenshots them.
-4. Run in GitHub Actions on PR:
-   ```yaml
-   - run: npm run build
-   - run: npx playwright install --with-deps chromium
-   - run: node scripts/visual-regression.mjs
-   - run: npx @argos-ci/cli upload screenshots/
-     env:
-       ARGOS_TOKEN: ${{ secrets.ARGOS_TOKEN }}
-   ```
-5. PR gets a check with a link to the visual diff in Argos's UI.
-
-**Why deferred**: needs an external account, repo secret, and per-repo CI surgery. Not blocking; revisit when a regression actually slips through.
+For an editorial 2-site setup with low PR frequency, the artifact approach is honest: it surfaces visual changes for human review without lying about what "passing CI" means.
 
 ---
 
-## 3. Shared `SubscribeBand` component
+## Open work that's worth doing next
 
-Now that we've validated `.astro` files ship cleanly through the package (see `components/ReadingProgress.astro`), the next candidate is the closing CTA band. Today each site has its own (`SubscribeSubstack.astro` / `SubstackCTA.astro`); they have ~80% overlap.
+These weren't in the original three but came up while building this out:
 
-**Plan**:
-
-- Accept `theme: "light" | "dark"`, `eyebrow`, `heading`, `subhead`, `cta` (label + href) as props.
-- Default to dark theme, since both sites currently use a dark band before footer.
-- Move into `nplus-shared/components/SubscribeBand.astro`.
-- Each consumer wraps it once in a thin per-site component that injects copy + URL.
-
-**Effort**: ~30 minutes. Do it next time either site touches its subscribe band copy.
+- **`design.nplus.page` subdomain + CNAME**: requires DNS + `public/CNAME` in `nplus-design` repo. Skipped because it needs DNS access.
+- **Move the per-site Subscribe wrappers (`SubscribeSubstack`, `SubstackCTA`) to be even thinner**: today they re-export `SubscribeBand` with copy. Could be a 4-line component. They're 25 lines because of the prop-passthrough; consider simplifying.
+- **Add `EpisodeCard` / `PodcastCard` to shared**: both sites have a card for "external audio episode + cover image". Today: `EpisodeCard.astro` (OTW) and `PodcastCard.astro` (nplus.page). They share ~70% structure. Lift after the next time either site touches them.
+- **Lighthouse CI**: pair with the visual-regression workflow to track perf/SEO/a11y scores across PRs. Cheap to add.
