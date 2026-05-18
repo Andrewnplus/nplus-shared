@@ -1,0 +1,35 @@
+/* ─────────────────────────────────────────────────────────
+ * @nplus/shared — design-token contract
+ *
+ * This file is the *interface*. Every N+ site exposes the
+ * same set of CSS variable names so components can be shared
+ * without renaming. The *values* of these variables are set
+ * by each site inside its own @theme block (cool-stone for
+ * nplus.page, warm-parchment for nplus.faith, etc.).
+ *
+ * Do NOT import this file directly into a site's global.css
+ * — it's documentation. Just keep your @theme block aligned
+ * to the names below.
+ *
+ * Required tokens
+ * ───────────────
+ *   --color-surface-50 .. --color-surface-950   (page bg → deepest dark, 11 steps)
+ *   --color-brand-50 .. --color-brand-900       (primary accent / CTA, 10 steps)
+ *   --color-brand-alt-50 .. --color-brand-alt-900 (optional secondary, 10 steps)
+ *
+ *   --font-sans     (UI / body)
+ *   --font-serif    (long-form prose)
+ *   --font-display  (headings; can equal --font-serif)
+ *   --font-mono     (code)
+ *
+ * Optional tokens
+ * ───────────────
+ *   --color-page              (defaults to --color-surface-50)
+ *
+ * Conventions
+ * ───────────
+ * - Surface 50 = lightest page background, 950 = deepest hero bg.
+ * - Brand 500  = canonical CTA color.
+ * - Brand 400  = canonical "on dark" link / eyebrow color.
+ * - Brand 600  = canonical "on light" link / hover color.
+ * ───────────────────────────────────────────────────────── */

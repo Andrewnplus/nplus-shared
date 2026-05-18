@@ -1,0 +1,29 @@
+{
+  "name": "@nplus/shared",
+  "version": "0.1.0",
+  "type": "module",
+  "private": true,
+  "description": "Shared design tokens, configs, and library utilities used by nplus.page and nplus.faith.",
+  "exports": {
+    "./eslint.base": "./configs/eslint.base.mjs",
+    "./tsconfig.base.json": "./configs/tsconfig.base.json",
+    "./prettier.base": "./configs/prettier.base.json",
+    "./tokens.contract.css": "./design-tokens/tokens.contract.css",
+    "./prose.contract.css": "./design-tokens/prose.contract.css",
+    "./lib/reading-time": "./lib/reading-time.ts",
+    "./lib/format": "./lib/format.ts",
+    "./lib/seo": "./lib/seo.ts"
+  },
+  "files": [
+    "configs",
+    "design-tokens",
+    "lib",
+    "README.md"
+  ],
+  "dependencies": {
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.0.3",
+    "eslint-plugin-astro": "^1.6.0",
+    "typescript-eslint": "^8.57.1"
+  }
+}

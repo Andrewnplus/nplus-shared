@@ -1,0 +1,21 @@
+/* ─────────────────────────────────────────────────────────
+ * Shared .prose-blog override pattern.
+ * Each site declares its own .prose-blog rule but should map
+ * to these Tailwind Typography custom-property hooks so MDX
+ * articles look consistent across the family.
+ *
+ * Example minimal override in a consumer site:
+ *
+ *   .prose-blog {
+ *     --tw-prose-body:           var(--color-surface-600);
+ *     --tw-prose-headings:       var(--color-surface-700);
+ *     --tw-prose-links:          var(--color-brand-600);
+ *     --tw-prose-bold:           var(--color-surface-700);
+ *     --tw-prose-quote-borders:  var(--color-brand-500);
+ *     --tw-prose-pre-bg:         var(--color-surface-900);
+ *
+ *     font-family: var(--font-serif);
+ *     font-size: 1.125rem;
+ *     line-height: 1.85;
+ *   }
+ * ───────────────────────────────────────────────────────── */
