@@ -1,0 +1,81 @@
+---
+/**
+ * Top-of-page reading progress bar — shared by all N+ static sites.
+ * Drop into any long-form article layout (BlogPost / ArticleLayout).
+ *
+ * Uses the consumer site's `--color-brand-500` for the fill, so the bar
+ * picks up each site's brand color automatically.
+ *
+ * Uses CSS scroll-driven animation when supported; falls back to a tiny
+ * JS scroll listener otherwise. Respects prefers-reduced-motion.
+ */
+---
+
+<div class="rp-track" aria-hidden="true">
+  <div class="rp-bar" id="reading-progress"></div>
+</div>
+
+<style>
+  .rp-track {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    z-index: 60;
+    pointer-events: none;
+    background: transparent;
+  }
+  .rp-bar {
+    height: 100%;
+    width: 0%;
+    background: var(--color-brand-500);
+    transform-origin: 0 50%;
+    will-change: transform, width;
+    transition: width 80ms linear;
+  }
+  @supports (animation-timeline: scroll()) {
+    .rp-bar {
+      width: 100%;
+      transform: scaleX(0);
+      transition: none;
+      animation: rp-scale linear;
+      animation-timeline: scroll(root block);
+    }
+    @keyframes rp-scale {
+      from {
+        transform: scaleX(0);
+      }
+      to {
+        transform: scaleX(1);
+      }
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .rp-bar {
+      transition: none !important;
+      animation: none !important;
+    }
+  }
+</style>
+
+<script>
+  function setupReadingProgress() {
+    const bar = document.getElementById("reading-progress");
+    if (!bar) return;
+    if (CSS.supports("animation-timeline: scroll()")) return;
+
+    const update = () => {
+      const doc = document.documentElement;
+      const max = doc.scrollHeight - doc.clientHeight;
+      const pct = max > 0 ? Math.min(100, (window.scrollY / max) * 100) : 0;
+      (bar as HTMLElement).style.width = pct + "%";
+    };
+    update();
+    window.addEventListener("scroll", update, { passive: true });
+    window.addEventListener("resize", update);
+  }
+
+  setupReadingProgress();
+  document.addEventListener("astro:after-swap", setupReadingProgress);
+</script>

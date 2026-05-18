@@ -10,11 +10,13 @@
     "./prettier.base": "./configs/prettier.base.json",
     "./tokens.contract.css": "./design-tokens/tokens.contract.css",
     "./prose.contract.css": "./design-tokens/prose.contract.css",
+    "./components/ReadingProgress.astro": "./components/ReadingProgress.astro",
     "./lib/reading-time": "./lib/reading-time.ts",
     "./lib/format": "./lib/format.ts",
     "./lib/seo": "./lib/seo.ts"
   },
   "files": [
+    "components",
     "configs",
     "design-tokens",
     "lib",

@@ -74,6 +74,17 @@ Both sites expose the same CSS-variable names with **different values**:
 
 A site that wants its own theme just overrides the values inside `@theme { ... }`. Component code never reads colors directly — only via these tokens.
 
+## Visual identity continuity (signal that "it's the same author")
+
+The two sites have intentionally different visual languages, but should share a few subtle anchors so a reader who lands on both can feel the family resemblance:
+
+- **Favicon system**: same geometric mark (an `N+` ligature or stacked N+), different color fill per site (`brand-500` of that site). Each site keeps its own PNG/ICO bundle under `public/`, but the geometry must match. When refreshing one, refresh both.
+- **Footer copyright line**: `© {year} Andrew Yang · CC BY-NC-SA 4.0` — same wording, same order, same separator.
+- **Subscribe CTA structure**: three-part — eyebrow (`Newsletter` uppercase tracked) → serif headline → pill button. Colors per theme.
+- **Font fallback chain**: Noto Serif TC, Noto Sans TC, JetBrains Mono — never mix `PingFang TC` on one and `Songti TC` on the other.
+
+These rules live here (and not in each site's DESIGN.md) because they describe what *connects* the family rather than what each site looks like.
+
 ## Adding new shared utilities
 
 A function deserves to live here when:
