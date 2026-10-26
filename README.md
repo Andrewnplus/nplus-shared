@@ -2,40 +2,38 @@
 
 Shared infrastructure for the N+ static-site family:
 
-- [`andrewnplus.github.io`](../andrewnplus.github.io) — `nplus.page` (personal brand, dark cathedral route)
-- [`outside-the-walls`](../outside-the-walls) — `nplus.faith` (theology podcast, warm parchment route)
+- [`andrewnplus.github.io`](../../sites/andrewnplus.github.io) — `nplus.page` (personal brand, dark cathedral route)
+- [`outside-the-walls`](../../sites/outside-the-walls) — `nplus.faith` (theology podcast, warm parchment route)
+- [`nplus-design`](../nplus-design) — preview site at <https://nplus.page/nplus-design/> that renders every shared component in both themes
 
-Both sites are Astro 6 + React 19 + Tailwind v4 + MDX 5. The visual identity is **intentionally** different; this package only shares the parts that should NOT diverge: token API, lint/format/ts base configs, and a small set of pure-TS lib utilities.
+All are Astro 6 + React 19 + Tailwind v4 + MDX 5. The visual identity is **intentionally** different; this package only shares the parts that should NOT diverge: lint/ts base configs, two Astro components, and a few pure lib utilities.
 
 ## What's in here
 
-```
-nplus-shared/
-├── configs/
-│   ├── eslint.base.mjs         ← extend in each repo's eslint.config.mjs
-│   ├── prettier.base.json      ← reference in each repo's package.json
-│   └── tsconfig.base.json      ← extend in each repo's tsconfig.json
-├── design-tokens/
-│   ├── tokens.contract.css     ← documents the shared CSS-var API (surface-*/brand-*)
-│   └── prose.contract.css      ← shared .prose-blog override pattern
-└── lib/
-    ├── reading-time.ts         ← mixed CJK + Latin word counter → minutes
-    ├── format.ts               ← formatDate(d, "short"|"long")
-    └── seo.ts                  ← buildMeta({ title, description, image, url })
-```
+| Export                                  | Used by                    |
+| --------------------------------------- | -------------------------- |
+| `eslint.base`                           | all three                  |
+| `tsconfig.base.json`                    | all three                  |
+| `components/ReadingProgress.astro`      | all three                  |
+| `components/SubscribeBand.astro`        | all three                  |
+| `lib/visual-regression`                 | nplus.page, nplus.faith    |
+| `lib/reading-time`                      | nplus.page, nplus.faith    |
+| `lib/format`                            | nplus.page                 |
+
+Keep this table true: an export no consumer imports gets deleted, not kept "for later".
 
 ## Wiring up
 
-Each consumer repo declares this as a file: dependency:
+Consumers depend on the GitHub repo, not a local path, so CI can install it:
 
 ```jsonc
 // package.json
 "dependencies": {
-  "@nplus/shared": "file:../nplus-shared"
+  "@nplus/shared": "github:Andrewnplus/nplus-shared#main"
 }
 ```
 
-Then:
+The consumer's `package-lock.json` pins the commit. After pushing a change here, pull it into each consumer with `npm update @nplus/shared` and commit the lockfile — check it on `nplus-design` first.
 
 ```js
 // eslint.config.mjs
@@ -49,30 +47,29 @@ export default [...base /* , per-repo overrides */];
 ```
 
 ```ts
-// somewhere in src/
 import { readingTime } from "@nplus/shared/lib/reading-time";
 import { formatDate } from "@nplus/shared/lib/format";
 ```
 
-```css
-/* src/styles/global.css */
-@import "@nplus/shared/tokens.contract.css";
-/* then redefine the values per theme */
-```
-
 ## Design-token contract
 
-Both sites expose the same CSS-variable names with **different values**:
+The shared components read only CSS variables, so every site must define the same names inside its own `@theme { ... }` block, with its own values:
 
-| Variable             | nplus.page (cool stone)      | nplus.faith (warm parchment) |
-| -------------------- | ---------------------------- | ----------------------------- |
-| `--color-surface-50` | `#f7f7f5` cool linen          | `#faf6ee` warm cream          |
-| `--color-surface-900`| `#0d0e0c` near-black          | `#14100c` deep wood           |
-| `--color-brand-500`  | `#1f8aa5` Fiestaware turquoise| `#8a3a2c` oxblood             |
-| `--color-brand-alt-500` | (unused)                   | `#3f5638` deep forest         |
-| `--font-display`     | Fraunces                      | Source Serif 4                |
+- `--color-surface-50` … `--color-surface-950` — page bg → deepest dark (50 = light page bg, 950 = deepest hero bg)
+- `--color-brand-50` … `--color-brand-900` — primary accent (500 = CTA, 400 = link/eyebrow on dark, 600 = link/hover on light)
+- `--color-brand-alt-50` … `--color-brand-alt-900` — optional secondary
+- `--font-sans`, `--font-serif`, `--font-display` (may equal serif), `--font-mono`
+- `--color-page` — optional, defaults to `--color-surface-50`
 
-A site that wants its own theme just overrides the values inside `@theme { ... }`. Component code never reads colors directly — only via these tokens.
+| Variable                | nplus.page (cool stone)        | nplus.faith (warm parchment) |
+| ----------------------- | ------------------------------ | ---------------------------- |
+| `--color-surface-50`    | `#f7f7f5` cool linen           | `#faf6ee` warm cream         |
+| `--color-surface-900`   | `#0d0e0c` near-black           | `#14100c` deep wood          |
+| `--color-brand-500`     | `#1f8aa5` Fiestaware turquoise | `#8a3a2c` oxblood            |
+| `--color-brand-alt-500` | (unused)                       | `#3f5638` deep forest        |
+| `--font-display`        | Fraunces                       | Source Serif 4               |
+
+Long-form prose: each site's `.prose-blog` maps the Tailwind Typography hooks (`--tw-prose-body`, `--tw-prose-headings`, `--tw-prose-links`, …) onto these tokens rather than hard-coding colors.
 
 ## Visual identity continuity (signal that "it's the same author")
 
@@ -85,11 +82,17 @@ The two sites have intentionally different visual languages, but should share a 
 
 These rules live here (and not in each site's DESIGN.md) because they describe what *connects* the family rather than what each site looks like.
 
-## Adding new shared utilities
+## Visual regression
 
-A function deserves to live here when:
+Each consumer site has `scripts/screenshot.mjs` (route list) on top of `lib/visual-regression.mjs` (shared headless Chrome config), run by `.github/workflows/visual-regression.yml` on every PR. It uploads one PNG per route × viewport (1280×800, 390×844) as the `screenshots-pr-<n>` artifact; compare by eye. There is no baseline diff — adding Argos would need an account and an `ARGOS_TOKEN` secret per site.
 
-- it's pure (no UI), and
-- both sites would otherwise copy it.
+## Adding new shared code
 
-If only one site uses it, leave it in that site. Don't pre-emptively share.
+Something deserves to live here when:
+
+- both sites would otherwise copy it, and
+- it is pure (lib) or reads only the token contract (component).
+
+If only one site uses it, leave it in that site. Don't pre-emptively share. A new component also gets a render section in `nplus-design/src/pages/components.astro`, or the preview drifts.
+
+Candidates once either site touches them again: `EpisodeCard` (nplus.faith) and `PodcastCard` (nplus.page) share ~70% of their structure.
